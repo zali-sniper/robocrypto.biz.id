@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Indodax } from '@/lib/indodax';
 import { decrypt } from '@/lib/utils';
 import { query } from '@/lib/db';
+import { auth } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
     try {
@@ -9,17 +10,23 @@ export async function POST(req: NextRequest) {
         const { action, params, apiKeyId } = body;
 
         // 1. Get API Key from DB
-        // SECURITY WARNING: In a real app, you MUST verify the user session here.
-        // For this MVP, we are assuming single-user or handling it simply.
+        // SECURITY UPDATE: Verify user session
+        const session = await auth();
+        if (!session || !session.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        // @ts-ignore
+        const userId = session.user.id;
 
         if (!apiKeyId) {
             return NextResponse.json({ error: 'API Key ID required' }, { status: 400 });
         }
 
-        const result = await query('SELECT api_key, api_secret FROM api_keys WHERE id = $1', [apiKeyId]);
+        const result = await query('SELECT api_key, api_secret FROM api_keys WHERE id = $1 AND user_id = $2', [apiKeyId, userId]);
 
         if (result.rows.length === 0) {
-            return NextResponse.json({ error: 'API Key not found' }, { status: 404 });
+            return NextResponse.json({ error: 'API Key not found or does not belong to you' }, { status: 404 });
         }
 
         const { api_key, api_secret } = result.rows[0];

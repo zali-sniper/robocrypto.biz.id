@@ -9,7 +9,7 @@ export default function Home() {
           <Link href="#features" className="hover:text-blue-400 transition">Fitur</Link>
           <Link href="#pricing" className="hover:text-blue-400 transition">Harga</Link>
           <Link href="#tax" className="hover:text-blue-400 transition">Kepatuhan Pajak</Link>
-          <Link href="/dashboard" className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition">
+          <Link href="/login" className="bg-blue-600 px-5 py-2 rounded-lg hover:bg-blue-700 transition">
             Mulai Sekarang
           </Link>
         </div>
@@ -24,7 +24,7 @@ export default function Home() {
           Cepat, Aman, dan Transparan.
         </p>
         <div className="flex justify-center gap-4">
-          <Link href="/dashboard" className="bg-blue-600 px-8 py-4 rounded-xl font-bold hover:scale-105 transition">
+          <Link href="/login" className="bg-blue-600 px-8 py-4 rounded-xl font-bold hover:scale-105 transition">
             Coba Gratis
           </Link>
           <button className="glass px-8 py-4 rounded-xl font-bold hover:bg-white hover:text-black transition">

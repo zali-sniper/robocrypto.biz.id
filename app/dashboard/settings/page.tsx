@@ -12,14 +12,19 @@ export default function SettingsPage() {
         e.preventDefault();
         setStatus('Saving...');
 
-        // In a real app, you would send this to an API route to save to DB
-        // For now we just mock the success
         try {
-            // await fetch('/api/keys', { method: 'POST', body: JSON.stringify({ apiKey, apiSecret, label }) })
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setStatus('Saved successfully (Mock)!');
+            const res = await fetch('/api/keys', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey, apiSecret, label })
+            });
+
+            if (!res.ok) throw new Error('Failed to save');
+
+            setStatus('Saved successfully!');
             setApiKey('');
             setApiSecret('');
+            setLabel('');
         } catch (err) {
             setStatus('Error saving key.');
         }

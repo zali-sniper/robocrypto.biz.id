@@ -1,15 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, Square, Settings as SettingsIcon } from 'lucide-react';
 
 export default function BotPage() {
     const [isRunning, setIsRunning] = useState(false);
     const [pair, setPair] = useState('btcidr');
     const [strategy, setStrategy] = useState('simple-grid');
+    const [keys, setKeys] = useState<any[]>([]);
+    const [selectedKeyId, setSelectedKeyId] = useState<string>('');
+    const [logs, setLogs] = useState<string[]>(['System ready.']);
 
-    const toggleBot = () => {
-        setIsRunning(!isRunning);
+    useEffect(() => {
+        fetch('/api/keys')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.keys.length > 0) {
+                    setKeys(data.keys);
+                    setSelectedKeyId(data.keys[0].id);
+                }
+            });
+    }, []);
+
+    const addLog = (msg: string) => {
+        setLogs(prev => [`[${new Date().toLocaleTimeString()}] ${msg}`, ...prev]);
+    }
+
+    const toggleBot = async () => {
+        if (!selectedKeyId) {
+            alert("Please select an API Key first in Settings!");
+            return;
+        }
+
+        if (!isRunning) {
+            // Start
+            try {
+                addLog(`Starting bot on ${pair}...`);
+                const res = await fetch('/api/indodax', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'getInfo', // Test connection first
+                        apiKeyId: selectedKeyId
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    setIsRunning(true);
+                    addLog(`Bot successfully connected. Balance: ${JSON.stringify(data.data.balance || 'hidden')}`);
+                } else {
+                    addLog(`Error: ${data.error}`);
+                }
+            } catch (e: any) {
+                addLog(`Connection error: ${e.message}`);
+            }
+        } else {
+            // Stop
+            setIsRunning(false);
+            addLog('Bot stopped.');
+        }
     };
 
     return (
@@ -28,7 +77,22 @@ export default function BotPage() {
                 <div className="glass p-6 rounded-2xl">
                     <div className="flex items-center gap-2 mb-6">
                         <SettingsIcon className="text-blue-500" />
+                        <SettingsIcon className="text-blue-500" />
                         <h3 className="text-xl font-bold">Strategy Settings</h3>
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium mb-1 text-gray-300">API Key Account</label>
+                        <select
+                            className="w-full bg-slate-800 border border-gray-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                            value={selectedKeyId}
+                            onChange={e => setSelectedKeyId(e.target.value)}
+                        >
+                            {keys.map(k => (
+                                <option key={k.id} value={k.id}>{k.label} ({k.api_key.substring(0, 8)}...)</option>
+                            ))}
+                            {keys.length === 0 && <option value="">No keys found. Go to Settings.</option>}
+                        </select>
                     </div>
 
                     <div className="space-y-4">
@@ -81,9 +145,9 @@ export default function BotPage() {
                 <div className="glass p-6 rounded-2xl">
                     <h3 className="text-xl font-bold mb-4">Activity Log</h3>
                     <div className="h-64 bg-black/20 rounded-xl p-4 overflow-y-auto font-mono text-sm space-y-2">
-                        <p className="text-gray-500">System ready.</p>
-                        {isRunning && <p className="text-green-400"> &gt; Bot started on {pair} ({strategy})...</p>}
-                        {/* Mock logs */}
+                        {logs.map((log, i) => (
+                            <p key={i} className="text-gray-400">{log}</p>
+                        ))}
                     </div>
                 </div>
             </div>
