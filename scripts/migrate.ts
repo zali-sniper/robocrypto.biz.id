@@ -15,7 +15,7 @@ async function main() {
     });
 
     try {
-        const sqlPath = path.join(process.cwd(), 'scripts', 'fix_db.sql');
+        const sqlPath = path.join(process.cwd(), 'scripts', 'init_db.sql');
         const sql = fs.readFileSync(sqlPath, 'utf8');
 
         console.log('Running migration from fix_db.sql...');
